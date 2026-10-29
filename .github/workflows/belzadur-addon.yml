@@ -1,0 +1,84 @@
+# Baut die App als fertiges Abbild ghcr.io/belzadur/govee2mqtt-addon:<version> (amd64 und arm64).
+# Warum: steht in addon/config.yaml ein image:, laedt der Supervisor das Abbild herunter, statt es
+# auf dem HA Green zu bauen, und schreibt es nicht in jedes Backup.
+# Neue Version = Nummer in addon/config.yaml erhoehen, sonst ueberschreibt der Bau das alte Abbild.
+name: belzadur App-Abbild bauen
+
+on:
+  push:
+    branches: [belzadur]
+    paths:
+      - "src/**"
+      - "addon/**"
+      - "assets/**"
+      - "Cargo.*"
+      - "build.rs"
+      - ".github/workflows/belzadur-addon.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  binary:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: baptiste0928/cargo-install@v3
+        with:
+          crate: cross
+      - name: Programm bauen
+        run: ./scripts/build-cross.sh ${{ matrix.platform }}
+      - name: Programm ablegen
+        run: echo "NAME=$(echo ${{ matrix.platform }} | tr / -)" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: govee-${{ env.NAME }}
+          path: docker-target/${{ matrix.platform }}/govee
+          if-no-files-found: error
+          retention-days: 1
+
+  image:
+    needs: binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: govee-linux-amd64
+          path: docker-target/linux/amd64
+      - uses: actions/download-artifact@v4
+        with:
+          name: govee-linux-arm64
+          path: docker-target/linux/arm64
+      - run: chmod +x docker-target/linux/*/govee
+      - name: Version aus addon/config.yaml lesen
+        id: version
+        run: |
+          version=$(sed -n 's/^version: *"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' addon/config.yaml)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: addon/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          provenance: false
+          labels: |
+            org.opencontainers.image.source=https://github.com/belzadur/govee2mqtt
+            io.hass.type=addon
+            io.hass.version=${{ steps.version.outputs.version }}
+          tags: ghcr.io/belzadur/govee2mqtt-addon:${{ steps.version.outputs.version }}

@@ -1,9 +1,9 @@
-name: Govee to MQTT Bridge
-image: ghcr.io/wez/govee2mqtt-{arch}
-version: "2026.03.25-ab9deb66"
+name: Govee to MQTT Bridge (belzadur)
+image: ghcr.io/belzadur/govee2mqtt-addon
+version: "2026.03.25-ab9deb66-b1"
 slug: govee2mqtt
-description: Control Govee Devices
-url: https://github.com/wez/govee2mqtt
+description: Control Govee Devices (with wez/govee2mqtt#720)
+url: https://github.com/belzadur/govee2mqtt
 arch:
   - amd64
   - aarch64
