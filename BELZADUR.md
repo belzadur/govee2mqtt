@@ -11,6 +11,10 @@ einmal nach der Anmeldung schickt (`GlobalFixedDiagnostic`, heute nur `Version`)
 Retain an den Broker (`HassClient::publish_retained`). Sonst gingen sie beim selben Wettlauf
 verloren, und `sensor.govee_to_mqtt_version` bliebe bis zum naechsten Neustart der Bruecke `unknown`.
 
+Ab `-b3` (01.11.2026): `addon/config.yaml` nennt den Konfigurationsordner `app_config` statt `addon_config`
+(Supervisor seit 2026.07, sonst Warnung „legacy map type“). Gleicher Ordner, nur der neue Name
+(Supervisor 2026.10.5, `supervisor/docker/app.py`).
+
 Zweig `main` bleibt der unveraenderte Stand von wez.
 
 App-Quelle in HA: `https://github.com/belzadur/govee2mqtt#belzadur`.
