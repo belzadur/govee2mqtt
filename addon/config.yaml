@@ -1,6 +1,6 @@
 name: Govee to MQTT Bridge (belzadur)
 image: ghcr.io/belzadur/govee2mqtt-addon
-version: "2026.03.25-ab9deb66-b1"
+version: "2026.03.25-ab9deb66-b2"
 slug: govee2mqtt
 description: Control Govee Devices (with wez/govee2mqtt#720)
 url: https://github.com/belzadur/govee2mqtt

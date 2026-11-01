@@ -61,7 +61,13 @@ impl EntityInstance for GlobalFixedDiagnostic {
     }
 
     async fn notify_state(&self, client: &HassClient) -> anyhow::Result<()> {
-        self.sensor.notify_state(&client, &self.value).await
+        // A fixed value is sent only once, right after registering with hass.
+        // On a busy hass start hass may not have subscribed to the state topic
+        // yet, and the value would be lost until we restart. Retain it, so
+        // hass receives it whenever it subscribes.
+        client
+            .publish_retained(&self.sensor.state_topic, &self.value)
+            .await
     }
 }
 

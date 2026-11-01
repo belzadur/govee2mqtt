@@ -6,6 +6,11 @@ die Bruecke meldet ihre Verfuegbarkeit jede Minute erneut "online". Ohne das ble
 einem HA-Neustart alle Govee-Entitaeten `unavailable`, wenn das einmalige "online" ankommt,
 bevor HA das Thema wieder abonniert hat (wez/govee2mqtt #110, #227, #572).
 
+Dazu eine eigene Aenderung (ab App-Version `-b2`, 01.11.2026): feste Werte, die die Bruecke nur
+einmal nach der Anmeldung schickt (`GlobalFixedDiagnostic`, heute nur `Version`), gehen mit
+Retain an den Broker (`HassClient::publish_retained`). Sonst gingen sie beim selben Wettlauf
+verloren, und `sensor.govee_to_mqtt_version` bliebe bis zum naechsten Neustart der Bruecke `unknown`.
+
 Zweig `main` bleibt der unveraenderte Stand von wez.
 
 App-Quelle in HA: `https://github.com/belzadur/govee2mqtt#belzadur`.

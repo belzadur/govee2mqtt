@@ -184,6 +184,25 @@ impl HassClient {
         Ok(())
     }
 
+    /// Like `publish`, but asks the broker to keep the message, so that a
+    /// subscriber that subscribes later (hass setting up our entities after a
+    /// busy start) still receives it. Only for values that never change while
+    /// we run, such as our own version: they are sent once and never again.
+    pub async fn publish_retained<
+        T: AsRef<str> + std::fmt::Display,
+        P: AsRef<[u8]> + std::fmt::Display,
+    >(
+        &self,
+        topic: T,
+        payload: P,
+    ) -> anyhow::Result<()> {
+        log::trace!("{topic} -> {payload} (retained)");
+        self.client
+            .publish(topic, payload, QoS::AtMostOnce, true)
+            .await?;
+        Ok(())
+    }
+
     pub async fn publish_obj<T: AsRef<str> + std::fmt::Display, P: Serialize>(
         &self,
         topic: T,
