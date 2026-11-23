@@ -320,6 +320,26 @@ impl State {
                 )
             })?;
 
+        if !on && lan_turn_off_reboots_device(&device.sku) {
+            if let Some(client) = self.get_platform_client().await {
+                if let Some(info) = &device.http_device_info {
+                    log::info!(
+                        "Using Platform API to turn off {device}: \
+                         LAN turn-off makes this model reboot and power back on"
+                    );
+                    client.set_toggle_state(info, instance_name, false).await?;
+                    if let Some(lan_dev) = &device.lan_device {
+                        // Only a status query, no command: brings the
+                        // LAN-side state (which HA sees) up to date.
+                        if let Err(err) = self.poll_lan_api(lan_dev, |status| !status.on).await {
+                            log::warn!("{device}: LAN status after Platform API off: {err:#}");
+                        }
+                    }
+                    return Ok(());
+                }
+            }
+        }
+
         if let Some(lan_dev) = &device.lan_device {
             log::info!("Using LAN API to set {device} light power state");
             lan_dev.send_turn(on).await?;
@@ -697,4 +717,11 @@ pub fn sort_and_dedup_scenes(mut scenes: Vec<String>) -> Vec<String> {
     scenes.sort_by_key(|s| s.to_ascii_lowercase());
     scenes.dedup();
     scenes
+}
+
+/// Models whose firmware reboots the device when it receives a LAN
+/// `turn` off command; the light then powers back on by itself.
+/// H60A6 firmware 1.00.48: <https://github.com/wez/govee2mqtt/issues/747>
+fn lan_turn_off_reboots_device(sku: &str) -> bool {
+    matches!(sku, "H60A6")
 }
