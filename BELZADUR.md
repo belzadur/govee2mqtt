@@ -15,6 +15,12 @@ Ab `-b3` (01.11.2026): `addon/config.yaml` nennt den Konfigurationsordner `app_c
 (Supervisor seit 2026.07, sonst Warnung „legacy map type“). Gleicher Ordner, nur der neue Name
 (Supervisor 2026.10.5, `supervisor/docker/app.py`).
 
+Ab `-b4` (23.11.2026): Bei der Deckenlampe H60A6 geht "Aus" ueber die Platform API (Cloud) statt
+ueber LAN. Firmware 1.00.48 startet die Lampe bei einem LAN-"turn off" neu, danach geht sie von selbst
+wieder an (wez/govee2mqtt#747). Danach nur eine LAN-Statusabfrage, damit HA "aus" sieht. Alles andere
+(Ein, Helligkeit, Farbe) bleibt LAN. `lan_turn_off_reboots_device` in `src/service/state.rs`; wieder
+entfernen, sobald Govee die Firmware repariert.
+
 Zweig `main` bleibt der unveraenderte Stand von wez.
 
 App-Quelle in HA: `https://github.com/belzadur/govee2mqtt#belzadur`.
